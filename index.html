@@ -29,7 +29,6 @@ nav button:hover{opacity:1}
 </style>
 </head>
 <body>
-
 <header>
 <h1>CINE LIVRE</h1>
 <nav>
@@ -38,7 +37,6 @@ nav button:hover{opacity:1}
 <button onclick="carregar('upcoming')">Lançamentos</button>
 </nav>
 </header>
-
 <div class="banner" id="banner">
 <div class="banner-info">
 <h2 id="bannerTitulo">CINE LIVRE</h2>
@@ -46,40 +44,23 @@ nav button:hover{opacity:1}
 <button class="btn-play" onclick="assistirBanner()">▶ Assistir</button>
 </div>
 </div>
-
-<div class="row">
-<h3>Em Alta</h3>
-<div class="lista-row" id="listaPopular"></div>
-</div>
-
-<div class="row">
-<h3>Top Avaliados</h3>
-<div class="lista-row" id="listaTop_rated"></div>
-</div>
-
-<div id="player">
-<button onclick="voltar()">⬅ Voltar</button>
-<iframe id="iframePlayer" allowfullscreen></iframe>
-</div>
-
+<div class="row"><h3>Em Alta</h3><div class="lista-row" id="listaPopular"></div></div>
+<div class="row"><h3>Top Avaliados</h3><div class="lista-row" id="listaTop_rated"></div></div>
+<div id="player"><button onclick="voltar()">⬅ Voltar</button><iframe id="iframePlayer" allowfullscreen></iframe></div>
 <script>
 const API_KEY="251ab326b041f1ccd4bfa4c407cd2940";
 const IMG="https://image.tmdb.org/t/p/w500";
 let filmeBanner = null;
-
 async function carregar(tipo){
 const res=await fetch(`https://api.themoviedb.org/3/movie/${tipo}?api_key=${API_KEY}&language=pt-BR`);
 const data=await res.json();
 mostrarLinha(data.results, tipo);
-
 if(tipo==='popular' && data.results[0]){
 filmeBanner = data.results[0];
 document.getElementById('banner').style.backgroundImage=`linear-gradient(to right, rgba(11,11,11,0.8) 0%, transparent 60%), url(${IMG}${filmeBanner.backdrop_path})`;
 document.getElementById('bannerTitulo').innerText=filmeBanner.title;
 document.getElementById('bannerDesc').innerText=filmeBanner.overview.substring(0,150)+"...";
-}
-}
-
+}}
 function mostrarLinha(filmes, id){
 let html="";
 filmes.forEach(f=>{
@@ -88,25 +69,13 @@ html+=`<div class="card" onclick="assistir(${f.id})"><img src="${IMG}${f.poster_
 });
 document.getElementById('lista'+id.charAt(0).toUpperCase()+id.slice(1)).innerHTML=html;
 }
-
 function assistir(id){
 document.getElementById('player').style.display="flex";
-// PLAYER NOVO - VIDAPI
-document.getElementById('iframePlayer').src=`https://vidapi.xyz/embed/movie/${id}`;
+document.getElementById('iframePlayer').src=`https://superembed.stream/embed/movie/${id}?lang=pt`;
 document.body.style.overflow="hidden";
 }
-
-function assistirBanner(){
-if(filmeBanner) assistir(filmeBanner.id)
-}
-
-function voltar(){
-document.getElementById('player').style.display="none";
-document.getElementById('iframePlayer').src="";
-document.body.style.overflow="auto";
-}
-
-// Carregar ao iniciar
+function assistirBanner(){if(filmeBanner) assistir(filmeBanner.id)}
+function voltar(){document.getElementById('player').style.display="none";document.getElementById('iframePlayer').src="";document.body.style.overflow="auto";}
 carregar('popular');
 carregar('top_rated');
 </script>
