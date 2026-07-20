@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEU CINEMA</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#141414;color:#fff;font-family:Arial}
+header{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;background:#000;position:sticky;top:0;z-index:50}
+.logo{color:#e50914;font-size:28px;font-weight:bold}#busca{padding:10px;width:250px;background:#333;border:none;border-radius:6px;color:#fff}
+.menu{display:flex;gap:15px;padding:15px 30px;background:#181818}.menu button{background:#333;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold}
+.menu button.ativo{background:#e50914}.container{padding:30px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px}
+.card{background:#222;border-radius:8px;overflow:hidden;cursor:pointer;transition:0.3s}.card:hover{transform:scale(1.05)}
+.card img{width:100%;height:270px;object-fit:cover}.card h3{padding:10px;font-size:14px;text-align:center}
+.player{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:none;z-index:999}
+.player iframe{width:100%;height:100%;border:none}.fechar{position:absolute;top:15px;right:30px;font-size:40px;color:#fff;cursor:pointer;z-index:1000}
+.selecao-ep{padding:20px;background:#181818}.selecao-ep select{padding:8px;margin:5px;background:#333;color:#fff;border:none;border-radius:5px}
+.lista-eps{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}.btn-ep{padding:8px 15px;background:#e50914;border:none;color:#fff;border-radius:5px;cursor:pointer}
+.voltar{padding:10px 20px;background:#555;border:none;color:#fff;border-radius:6px;margin:20px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><div class="logo">MEU CINEMA</div><input type="text" id="busca" placeholder="🔎 Buscar..."></header>
+<div class="menu">
+<button class="ativo" onclick="mostrarAba('filmes', this)">Filmes</button>
+<button onclick="mostrarAba('series', this)">Séries</button>
+<button onclick="mostrarAba('animes', this)">Animes</button>
+</div>
+<div class="container" id="container"></div>
+<div class="player" id="player"><span class="fechar" onclick="fechar()">×</span><iframe id="iframe" allowfullscreen></iframe></div>
+<script>
+const API_KEY="eb76a444cabe431c116819d926c";const BASE_URL="https://api.themoviedb.org/3";const IMG_URL="https://image.tmdb.org/t/p/w500";
+
+// ====== SÓ TROCA AQUI OS LINKS ======
+const MEUS_LINKS = {
+filmes: {
+299536: "https://drive.google.com/file/d/ABC123/preview", // Vingadores Ultimato
+},
+series: {
+1399: { // Game of Thrones
+1:{ // Temporada 1
+    1:"https://drive.google.com/file/d/LINK_EP1/preview",
+    2:"https://drive.google.com/file/d/LINK_EP2/preview"
+  },
+2:{ // Temporada 2
+    1:"https://drive.google.com/file/d/LINK_T2EP1/preview"
+  }
+}
+},
+animes: {
+1429: { // Attack on Titan
+1:{
+    1:"https://drive.google.com/file/d/LINK_AOT_EP1/preview",
+    2:"https://drive.google.com/file/d/LINK_AOT_EP2/preview"
+  }
+}
+}
+}
+// ====================================
+
+async function buscar(tipo, query="popular"){let url;if(query==="popular"){if(tipo==="filmes")url=`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=pt-BR`;if(tipo==="series")url=`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=pt-BR`;if(tipo==="animes")url=`${BASE_URL}/discover/tv?api_key=${API_KEY}&language=pt-BR&with_genres=16`}else{if(tipo==="filmes")url=`${BASE_URL}/search/movie?api_key=${API_KEY}&language=pt-BR&query=${query}`;if(tipo==="series"||tipo==="animes")url=`${BASE_URL}/search/tv?api_key=${API_KEY}&language=pt-BR&query=${query}`}
+const res=await fetch(url);const data=await res.json();mostrar(data.results,tipo)}
+function mostrar(itens,tipo){document.getElementById('container').innerHTML=itens.map(i=>`<div class="card" onclick="abrir('${tipo}',${i.id})"><img src="${IMG_URL}${i.poster_path}"><h3>${i.title||i.name}</h3></div>`).join('')}
+async function abrir(tipo,id){if(tipo==="filmes"){const link=MEUS_LINKS.filmes[id];if(link&&!link.includes("COLA"))assistir(link);else alert("Falta colocar o link desse filme")}
+if(tipo==="series"||tipo==="animes"){const res=await fetch(`${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=pt-BR`);const serie=await res.json();let html=`<button class="voltar" onclick="mostrarAba('${tipo}')">← Voltar</button><h2 style="padding:0 20px">${serie.name}</h2><div class="selecao-ep">Temporada: <select id="temp" onchange="carregarEps(${id},'${tipo}')">${serie.seasons.filter(s=>s.season_number>0).map(s=>`<option value="${s.season_number}">T${s.season_number}</option>`).join('')}</select><div class="lista-eps" id="lista-eps"></div></div>`;document.getElementById('container').innerHTML=html;carregarEps(id,tipo)}}
+function carregarEps(idSerie,tipo){const temp=document.getElementById('temp').value;const eps=MEUS_LINKS[tipo]?.[idSerie]?.[temp]||{};document.getElementById('lista-eps').innerHTML=Object.keys(eps).map(e=>`<button class="btn-ep" onclick="assistir('${eps[e]}')">Ep ${e}</button>`).join('')||"Sem link pra essa temporada"}
+function assistir(link){document.getElementById('iframe').src=link;document.getElementById('player').style.display='block'}
+function fechar(){document.getElementById('iframe').src='';document.getElementById('player').style.display='none'}
+function mostrarAba(aba,btn){if(btn)document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo'));if(btn)btn.classList.add('ativo');buscar(aba)}
+document.getElementById('busca').addEventListener('keyup',e=>{if(e.key==='Enter')buscar('filmes',e.target.value)});buscar('filmes');
+</script>
+</body>
+</html>
